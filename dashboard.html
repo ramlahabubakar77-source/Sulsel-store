@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penjual Dashboard - DigitalPro</title>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* GLOBAL STYLES */
+        :root {
+            --primary-purple: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --bg-dark: #0f172a;
+            --bg-sidebar: #1e293b;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --sidebar-width: 260px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+        aside {
+            width: var(--sidebar-width);
+            background-color: var(--bg-sidebar);
+            height: 100vh;
+            position: fixed;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .sidebar-header {
+            padding: 2rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-purple);
+            text-align: center;
+        }
+
+        .menu-list {
+            list-style: none;
+            padding: 0 1rem;
+        }
+
+        .menu-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem 1.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: 0.3s;
+        }
+
+        .menu-link:hover, .menu-link.active {
+            background-color: var(--primary-purple);
+            color: white;
+        }
+
+        /* MAIN CONTENT AREA */
+        main {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            transition: all 0.3s ease;
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        /* TOP BAR */
+        .top-bar {
+            height: 70px;
+            background-color: var(--bg-sidebar);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn-logout {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 1px solid #ef4444;
+            color: #ef4444;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-logout:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        /* DASHBOARD CONTENT */
+        .content-padding {
+            padding: 2rem;
+        }
+
+        /* STAT CARDS */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-card h3 {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        /* CHARTS */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .chart-container h4 {
+            margin-bottom: 1rem;
+            color: var(--text-main);
+        }
+
+        .chart-caption {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        /* TABLE */
+        .table-container {
+            background: var(--bg-card);
+            border-radius: 16px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-success { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .status-pending { background: rgba(234, 179, 8, 0.2); color: #facc15; }
+
+        /* MOBILE RESPONSIVE */
+        .menu-btn {
+            display: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: white;
+        }
+
+        @media (max-width: 992px) {
+            aside {
+                left: -100%;
+            }
+            aside.active {
+                left: 0;
+            }
+            main {
+                margin-left: 0;
+                width: 100%;
+            }
+            .menu-btn {
+                display: block;
+            }
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+        <div class="sidebar-header">DIGITALPRO</div>
+        <ul class="menu-list">
+            <li class="menu-item"><a href="#" class="menu-link active">Dashboard</a></li>
+            <li class="menu-item"><a href="#" class="menu-link">Produk</a></li>
+            <li class="menu-item"><a href="#" class="menu-link">Transaksi</a></li>
+            <li class="menu-item"><a href="#" class="menu-link">Laporan</a></li>
+            <li class="menu-item"><a href="#" class="menu-link">Pengaturan</a></li>
+        </ul>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main>
+        <!-- TOP BAR -->
+        <div class="top-bar">
+            <div class="menu-btn" onclick="toggleSidebar()">☰</div>
+            <div>
+                <h2 style="font-size: 1.2rem;">Ringkasan Toko</h2>
+            </div>
+            <div class="user-profile">
+                <span>Halo, <strong>Admin Penjual</strong></span>
+                <button class="btn-logout">Logout</button>
+            </div>
+        </div>
+
+        <div class="content-padding">
+            <!-- STATS CARD -->
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <h3>Total Penjualan</h3>
+                    <div class="value">Rp 12.450.000</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Transaksi</h3>
+                    <div class="value">158</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Produk Terjual</h3>
+                    <div class="value">342</div>
+                </div>
+            </div>
+
+            <!-- CHARTS -->
+            <div class="chart-grid">
+                <div class="chart-container">
+                    <h4>Penjualan (30 Hari Terakhir)</h4>
+                    <canvas id="monthlyChart"></canvas>
+                    <p class="chart-caption">Menunjukkan tren kenaikan penjualan secara stabil setiap bulannya.</p>
+                </div>
+                <div class="chart-container">
+                    <h4>Penjualan (7 Hari Terakhir)</h4>
+                    <canvas id="weeklyChart"></canvas>
+                    <p class="chart-caption">Statistik mingguan untuk memantau performa harian.</p>
+                </div>
+            </div>
+
+            <!-- TRANSACTION TABLE -->
+            <div class="table-container">
+                <div style="padding: 1.5rem; font-weight: bold; border-bottom: 1px solid var(--border-color);">
+                    Transaksi Terbaru
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Produk</th>
+                            <th>Email</th>
+                            <th>Nomor HP</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>DE-1715092001</td>
+                            <td>Premium Coffee Guide</td>
+                            <td>budi@gmail.com</td>
+                            <td>0812345678</td>
+                            <td><span class="status-badge status-success">Berhasil</span></td>
+                        </tr>
+                        <tr>
+                            <td>DE-1715092045</td>
+                            <td>Marketing Kit Digital</td>
+                            <td>sari@yahoo.com</td>
+                            <td>0819876543</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                        </tr>
+                        <tr>
+                            <td>DE-1715092099</td>
+                            <td>UI Design Course</td>
+                            <td>doni@email.com</td>
+                            <td>0855667788</td>
+                            <td><span class="status-badge status-success">Berhasil</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Toggle Sidebar Mobile
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+
+        // Configuration for Charts
+        const chartOptions = {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: { color: '#94a3b8' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#94a3b8' }
+                }
+            }
+        };
+
+        // Monthly Chart Data (30 days approximation)
+        const ctxMonthly = document.getElementById('monthlyChart').getContext('2d');
+        new Chart(ctxMonthly, {
+            type: 'line',
+            data: {
+                labels: ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4'],
+                datasets: [{
+                    label: 'Penjualan',
+                    data: [2100000, 3500000, 2800000, 4050000],
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: chartOptions
+        });
+
+        // Weekly Chart Data
+        const ctxWeekly = document.getElementById('weeklyChart').getContext('2d');
+        new Chart(ctxWeekly, {
+            type: 'bar',
+            data: {
+                labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
+                datasets: [{
+                    label: 'Pendapatan',
+                    data: [450000, 700000, 300000, 850000, 1200000, 1500000, 900000],
+                    backgroundColor: '#8b5cf6',
+                    borderRadius: 8
+                }]
+            },
+            options: chartOptions
+        });
+    </script>
+</body>
+</html>
